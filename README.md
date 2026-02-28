@@ -101,3 +101,13 @@ cd services/ingest
 export RELAY_BASE_URL="http://localhost:4001"
 pnpm weather:conditions
 ```
+
+### SPD blotter ingest
+
+Pull major incidents from the SPD blog RSS feed:
+
+```bash
+cd services/ingest
+export RELAY_BASE_URL="http://localhost:4001"
+pnpm spd:blotter
+```

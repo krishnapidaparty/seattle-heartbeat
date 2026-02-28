@@ -82,3 +82,13 @@ export RELAY_BASE_URL="http://localhost:4001"
 pnpm weather:conditions
 ```
 
+## SPD blotter ingest
+
+Scrape the official SPD blotter RSS feed for major incidents (shootings, robberies, assaults) and emit relays when a new article appears.
+
+```bash
+cd services/ingest
+export RELAY_BASE_URL="http://localhost:4001"
+pnpm spd:blotter
+```
+
