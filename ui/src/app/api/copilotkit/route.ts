@@ -5,6 +5,7 @@ import {
   copilotRuntimeNextJSAppRouterEndpoint,
 } from "@copilotkit/runtime";
 import { HttpAgent } from "@ag-ui/client";
+import { BuiltInAgent } from "@copilotkitnext/agent";
 import { NextRequest } from "next/server";
 import {
   getBridgeConfig,
@@ -14,7 +15,12 @@ import {
 const config = getBridgeConfig();
 
 function buildAgents(cfg: BridgeConfig) {
-  const agents: Record<string, HttpAgent> = {};
+  const agents: Record<string, HttpAgent | BuiltInAgent> = {};
+
+  if (cfg.mode === "hybrid") {
+    const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+    agents.default = new BuiltInAgent({ model });
+  }
 
   if (cfg.mode === "openclaw" || cfg.mode === "hybrid") {
     const headers: Record<string, string> = {};
