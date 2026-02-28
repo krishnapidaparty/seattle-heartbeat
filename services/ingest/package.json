@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "weather": "tsx src/weather-alerts.ts"
+    "weather": "tsx src/weather-alerts.ts",
+    "fire": "tsx src/fire-911.ts",
+    "weather:conditions": "tsx src/weather-conditions.ts"
   },
   "dependencies": {
     "tsx": "^4.19.0"

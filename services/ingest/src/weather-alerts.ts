@@ -56,6 +56,20 @@ function targetsForEvent(kind: string) {
 
   if (!features.length) {
     console.log("No active weather alerts for WA.");
+    // Optional: post a sample weather relay so you can verify the UI when the feed is empty
+    if (process.env.SAMPLE_WEATHER_IF_EMPTY === "1" || process.env.SAMPLE_WEATHER_IF_EMPTY === "true") {
+      console.log("Posting sample weather relay (SAMPLE_WEATHER_IF_EMPTY is set).");
+      await postRelay({
+        origin: "WestSeattle",
+        targets: ["Downtown", "SoDo", "Ballard"],
+        category: "weather:sample-wind-advisory",
+        impactScore: 0.5,
+        urgency: "normal",
+        window: "now → later today",
+        requestedActions: ["Sample: secure outdoor items when wind picks up.", "Monitor NOAA for updates."],
+        notes: "Sample weather relay — no active NOAA alerts for WA. Set SAMPLE_WEATHER_IF_EMPTY=1 to post this for testing.",
+      }).then(() => console.log("Sample weather relay posted.")).catch((err) => console.error("Sample relay POST failed", err));
+    }
     return;
   }
 

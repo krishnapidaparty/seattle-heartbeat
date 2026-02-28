@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useRelayContext } from "@/core/providers/RelayContext";
 import { NEIGHBORHOODS } from "@/data/neighborhoods";
+import { useWeatherConditions } from "@/hooks/useWeatherConditions";
 import { RelayPacket } from "@/lib/relay/types";
 import { RelayFeedPanel } from "./RelayFeedPanel";
 
@@ -47,6 +48,7 @@ function statusLabel(level: StatusLevel) {
 
 export function NeighborhoodDashboard() {
   const { relays, isLoading } = useRelayContext();
+  const { conditions: weatherConditions, error: weatherError } = useWeatherConditions();
 
   const neighborhoods = useMemo(() => {
     return NEIGHBORHOODS.map((hood) => {
@@ -90,6 +92,11 @@ export function NeighborhoodDashboard() {
                       <h2 className="text-base font-semibold">{hood.name}</h2>
                       <p className="text-xs text-foreground/50">
                         {hood.description}
+                      </p>
+                      <p className="mt-1 text-xs text-foreground/50">
+                        {weatherConditions[hood.id]
+                          ? `${weatherConditions[hood.id].temperatureC ?? "--"}°C · ${weatherConditions[hood.id].humidity ?? "--"}% humidity · ${weatherConditions[hood.id].windKmh ?? "--"} km/h wind`
+                          : weatherError ?? "Loading weather…"}
                       </p>
                     </div>
                     <span

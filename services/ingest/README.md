@@ -33,4 +33,52 @@ Each alert is posted with:
 - `window`: onset → end timestamps
 - `requestedActions`: NOAA instructions (or defaults)
 
-Run the script periodically (e.g., every 10 minutes) to keep relays fresh.
+When there are **no active NOAA alerts** for WA, the script posts nothing, so the Relay Feed stays empty. To post a **sample weather relay** for testing when the feed is empty, set:
+
+```bash
+export SAMPLE_WEATHER_IF_EMPTY=1
+pnpm weather
+```
+
+Then refresh the UI to see the sample entry.
+
+### Run every 10 minutes (cron)
+
+Use the runner script so cron has a single command to run:
+
+```bash
+# Make sure the script is executable (already done if you followed setup)
+chmod +x services/ingest/run-weather.sh
+```
+
+Add a crontab entry (run `crontab -e` and paste the line below; fix the path if your repo lives elsewhere):
+
+```cron
+# NOAA weather ingest every 10 minutes (ensure PATH includes pnpm)
+*/10 * * * * PATH="/usr/local/bin:/opt/homebrew/bin:$HOME/.local/share/pnpm:$PATH" /Users/kpidaparty/Library/CloudStorage/OneDrive-Chewy.com,LLC/Desktop/seattle-heartbeat/services/ingest/run-weather.sh >> /tmp/seattle-weather-ingest.log 2>&1
+```
+
+Leave the relay service running (`pnpm dev` in `services/relay-service`) so posted relays are received. Logs go to `/tmp/seattle-weather-ingest.log`.
+
+## Fire 911 ingest
+
+Fetch active Seattle Fire 911 incidents from the public Socrata feed (last 30 minutes) and emit relays for each call.
+
+```bash
+cd services/ingest
+export RELAY_BASE_URL="http://localhost:4001"
+pnpm fire
+```
+
+Set `SOCRATA_APP_TOKEN` if you have a token for higher rate limits.
+
+## Weather condition thresholds
+
+Poll Open-Meteo for current temperature / humidity / wind per neighborhood and emit relays when thresholds trigger (e.g., high winds, slick roads, heat).
+
+```bash
+cd services/ingest
+export RELAY_BASE_URL="http://localhost:4001"
+pnpm weather:conditions
+```
+
