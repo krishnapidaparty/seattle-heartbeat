@@ -1,0 +1,11 @@
+{
+  "name": "seattle-heartbeat-ingest",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "weather": "tsx src/weather-alerts.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.19.0"
+  }
+}
