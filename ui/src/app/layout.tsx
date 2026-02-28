@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import "@copilotkit/react-ui/styles.css";
 import { ClawUIProvider } from "@/core/providers/ClawUIProvider";
+import { RelayProvider } from "@/core/providers/RelayContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,7 +31,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ClawUIProvider>{children}</ClawUIProvider>
+        <RelayProvider>
+          <ClawUIProvider>{children}</ClawUIProvider>
+        </RelayProvider>
       </body>
     </html>
   );
