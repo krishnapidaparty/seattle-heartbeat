@@ -34,7 +34,7 @@ function conditionFromTitle(title: string) {
     const description: string = item.description ?? "";
 
     const publishedTs = pubDate ? Date.parse(pubDate) : null;
-    if (publishedTs && now - publishedTs > 6 * 60 * 60 * 1000) continue;
+    if (publishedTs && now - publishedTs > 7 * 24 * 60 * 60 * 1000) continue;
 
     const locationMatch = description.match(/(?:near|at) ([A-Za-z ]+,? [A-Za-z ]+)/i);
     const location = locationMatch ? locationMatch[1] : "Seattle";

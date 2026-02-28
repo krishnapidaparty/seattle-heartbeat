@@ -17,6 +17,16 @@ const FEED_TYPES: { key: FeedKey; label: string }[] = [
   { key: "crime", label: "SPD" },
 ];
 
+function formatDateLabel(window?: string) {
+  if (!window) return "";
+  const parsed = Date.parse(window);
+  if (Number.isNaN(parsed)) return window;
+  return new Date(parsed).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 function determineStatus(hoodId: string, relays: RelayPacket[]): StatusLevel {
   const active = relays.filter((relay) => relay.status !== "resolved");
   const relevant = active.filter(
@@ -48,9 +58,11 @@ function feedSummary(feed: FeedKey, hoodId: string, relays: RelayPacket[]) {
     (r) => r.urgency === "urgent" || r.impactScore >= 0.8,
   );
   const latest = relevant[0];
+  const dateLabel = formatDateLabel(latest.window);
+  const baseText = latest.notes || latest.requestedActions?.[0] || "Monitoring";
   return {
     level: hasCritical ? "critical" : "elevated",
-    text: latest.notes || latest.requestedActions?.[0] || "Monitoring",
+    text: dateLabel ? `${dateLabel} — ${baseText}` : baseText,
   };
 }
 
