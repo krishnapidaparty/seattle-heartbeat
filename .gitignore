@@ -1,0 +1,7 @@
+node_modules
+.DS_Store
+.env
+ui/.env
+services/relay-service/dist
+services/relay-service/node_modules
+ui/node_modules
