@@ -9,6 +9,14 @@ import { RelayFeedPanel } from "./RelayFeedPanel";
 
 type StatusLevel = "normal" | "elevated" | "critical";
 
+type FeedKey = "weather" | "fire" | "crime";
+
+const FEED_TYPES: { key: FeedKey; label: string }[] = [
+  { key: "weather", label: "Weather" },
+  { key: "fire", label: "Fire / 911" },
+  { key: "crime", label: "SPD" },
+];
+
 function determineStatus(hoodId: string, relays: RelayPacket[]): StatusLevel {
   const active = relays.filter((relay) => relay.status !== "resolved");
   const relevant = active.filter(
@@ -22,6 +30,39 @@ function determineStatus(hoodId: string, relays: RelayPacket[]): StatusLevel {
     return "elevated";
   }
   return "normal";
+}
+
+function feedSummary(feed: FeedKey, hoodId: string, relays: RelayPacket[]) {
+  const prefix =
+    feed === "crime" ? "crime:" : feed === "fire" ? "fire:" : "weather:";
+  const relevant = relays.filter(
+    (relay) =>
+      relay.status !== "resolved" &&
+      (relay.origin === hoodId || relay.targets.includes(hoodId)) &&
+      relay.category.startsWith(prefix),
+  );
+  if (!relevant.length) {
+    return { level: "normal" as StatusLevel, text: "All clear" };
+  }
+  const hasCritical = relevant.some(
+    (r) => r.urgency === "urgent" || r.impactScore >= 0.8,
+  );
+  const latest = relevant[0];
+  return {
+    level: hasCritical ? "critical" : "elevated",
+    text: latest.notes || latest.requestedActions?.[0] || "Monitoring",
+  };
+}
+
+function tileClasses(level: StatusLevel) {
+  switch (level) {
+    case "critical":
+      return "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200";
+    case "elevated":
+      return "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200";
+    default:
+      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200";
+  }
 }
 
 function statusLabel(level: StatusLevel) {
@@ -82,6 +123,9 @@ export function NeighborhoodDashboard() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {neighborhoods.map((hood) => {
               const { label, badge } = statusLabel(hood.status);
+              const feedSummaries = Object.fromEntries(
+                FEED_TYPES.map(({ key }) => [key, feedSummary(key, hood.id, relays)]),
+              ) as Record<FeedKey, { level: StatusLevel; text: string }>;
               return (
                 <article
                   key={hood.id}
@@ -104,6 +148,25 @@ export function NeighborhoodDashboard() {
                     >
                       {label}
                     </span>
+                  </div>
+
+                  <div className="mt-3 grid gap-2 text-[11px] sm:grid-cols-3">
+                    {FEED_TYPES.map(({ key, label }) => {
+                      const summary = feedSummaries[key];
+                      return (
+                        <div
+                          key={key}
+                          className={`rounded-xl px-3 py-2 ${tileClasses(summary.level)}`}
+                        >
+                          <p className="font-semibold uppercase tracking-wide text-[10px]">
+                            {label}
+                          </p>
+                          <p className="mt-1 leading-snug">
+                            {summary.text}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {hood.impactingRelays.length > 0 ? (
