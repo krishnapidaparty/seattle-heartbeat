@@ -20,13 +20,16 @@ function decodeWSDOTDate(value?: string) {
 }
 
 function mapNeighborhood(name?: string) {
-  const lower = (name ?? "").toLowerCase();
-  if (lower.includes("i-5") && lower.includes("downtown")) return "Downtown";
-  if (lower.includes("sr 99") || lower.includes("alaskan")) return "SoDo";
-  if (lower.includes("ballard") || lower.includes("fremont")) return "Ballard";
-  if (lower.includes("queen anne") || lower.includes("mercer")) return "QueenAnne";
-  if (lower.includes("west seattle")) return "WestSeattle";
-  if (lower.includes("capitol") || lower.includes("madison")) return "CapitolHill";
+  const text = (name ?? "").toLowerCase();
+  if (!/seattle|bellevue|everett|tacoma|issaquah|kirkland|renton|shoreline/.test(text)) {
+    return null;
+  }
+  if (text.includes("i-5") && text.includes("downtown")) return "Downtown";
+  if (text.includes("sr 99") || text.includes("alaskan")) return "SoDo";
+  if (text.includes("ballard") || text.includes("fremont")) return "Ballard";
+  if (text.includes("queen anne") || text.includes("mercer")) return "QueenAnne";
+  if (text.includes("west seattle")) return "WestSeattle";
+  if (text.includes("capitol") || text.includes("madison")) return "CapitolHill";
   return closestNeighborhood(47.6062, -122.3321).id;
 }
 
@@ -71,6 +74,7 @@ function severity(current?: number, average?: number) {
   let posted = 0;
   for (const { route, info, updatedAt } of topAlerts) {
     const hoodId = mapNeighborhood(route.Name);
+    if (!hoodId) continue;
     const description = route.Description ?? route.Name ?? "WSDOT route";
 
     await postRelay({

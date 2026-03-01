@@ -64,7 +64,7 @@ function conditionFromTitle(title: string) {
           ? "Stay indoors until SPD clears the area and expect police activity."
           : "Expect police presence; report suspicious activity to SPD."
       ],
-      notes: link ? `${title} — ${link}` : title,
+      notes: title,
     }).catch((err) => console.error("Failed to post SPD relay", err));
     posted += 1;
   }

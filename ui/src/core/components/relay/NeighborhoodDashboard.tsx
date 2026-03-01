@@ -26,6 +26,9 @@ const CATEGORY_PREFIX: Record<FeedKey, string> = {
 
 const FEED_PRIORITY: FeedKey[] = ["crime", "fire", "traffic", "weather"];
 
+type FeedSummary = { level: StatusLevel; text: string };
+type FeedSummaryMap = Record<FeedKey, FeedSummary>;
+
 export function NeighborhoodDashboard() {
   const { relays } = useRelayContext();
   const { conditions: weatherConditions, error: weatherError } = useWeatherConditions();
@@ -100,8 +103,11 @@ function NeighborhoodCard({
   weatherError?: string;
 }) {
   const accent = tileAccent(status);
-  const headline = tileHeadline(hoodId, relays);
-  const llmSummary = neighborhoodSummary(hoodId, relays);
+  const feedSummaries = Object.fromEntries(
+    FEED_TYPES.map(({ key }) => [key, feedSummary(key, hoodId, relays)]),
+  ) as FeedSummaryMap;
+  const headline = buildHeadline(feedSummaries);
+  const llmSummary = neighborhoodSummary(feedSummaries);
 
   return (
     <article
@@ -128,7 +134,7 @@ function NeighborhoodCard({
 
       <div className="mt-4 grid gap-2 text-[11px] lg:grid-cols-4 sm:grid-cols-2">
         {FEED_TYPES.map(({ key, label }) => {
-          const summary = feedSummary(key, hoodId, relays);
+          const summary = feedSummaries[key];
           return (
             <div key={key} className={`rounded-2xl px-3 py-2 ${tileAccent(summary.level).panel}`}>
               <p className="text-[10px] font-semibold uppercase tracking-wide text-foreground/60">
@@ -196,18 +202,13 @@ function tileHeadline(hoodId: string, relays: RelayPacket[]) {
   return truncateText(`${dateLabel ? `${dateLabel} · ` : ""}${base}`, 120);
 }
 
-function neighborhoodSummary(hoodId: string, relays: RelayPacket[]) {
-  const active = relays.filter(
-    (relay) => relay.status !== "resolved" && (relay.origin === hoodId || relay.targets.includes(hoodId)),
-  );
-  if (!active.length) return "Calm stretch — no alerts on the board.";
-  const sorted = active.sort((a, b) => (a.urgency === "urgent" ? -1 : 1));
-  const top = sorted[0];
-  const feed = feedKeyForCategory(top.category);
-  const label = feed ? FEED_TYPES.find((f) => f.key === feed)?.label : "Signal";
-  const dateLabel = formatDateLabel(top.window);
-  const descriptor = top.notes || top.requestedActions?.[0] || top.category;
-  return truncateText(`${label ? `${label}: ` : ""}${dateLabel ? `${dateLabel} · ` : ""}${descriptor}`, 140);
+function neighborhoodSummary(feedSummaries: FeedSummaryMap) {
+  const pieces = FEED_TYPES.map(({ key, label }) => {
+    const summary = feedSummaries[key];
+    if (!summary || summary.text === "All clear") return `${label}: calm`;
+    return `${label}: ${summary.text}`;
+  });
+  return truncateText(pieces.join(" | "), 180);
 }
 
 function feedSummary(feed: FeedKey, hoodId: string, relays: RelayPacket[]) {
