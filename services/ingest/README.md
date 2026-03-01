@@ -102,5 +102,4 @@ export RELAY_BASE_URL="http://localhost:4001"
 pnpm events:mariners
 ```
 
-Set `SAMPLE_EVENTS_IF_EMPTY=1` if there are no home games this week but you still want a demo packet.
 

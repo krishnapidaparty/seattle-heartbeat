@@ -59,20 +59,5 @@ function targetsForVenue(name: string) {
   }
 
 
-  if (posted === 0 && (process.env.SAMPLE_EVENTS_IF_EMPTY === "1" || process.env.SAMPLE_EVENTS_IF_EMPTY === "true")) {
-    await postRelay({
-      id: "event-sample",
-      origin: "SoDo",
-      targets: ["SoDo", "Downtown"],
-      category: "event:sample-stadium",
-      impactScore: 0.6,
-      urgency: "normal",
-      window: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-      requestedActions: ["Sample event: expect heavy traffic near T-Mobile Park."],
-      notes: "Sample Mariners event this weekend",
-    });
-    posted = 1;
-  }
-
   console.log(`Posted ${posted} Mariners events.`);
 })();
