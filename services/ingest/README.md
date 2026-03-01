@@ -92,3 +92,15 @@ export RELAY_BASE_URL="http://localhost:4001"
 pnpm spd:blotter
 ```
 
+## Mariners events ingest
+
+Pull upcoming Mariners (or other stadium) games via the MLB stats API and emit relays for SoDo/Downtown.
+
+```bash
+cd services/ingest
+export RELAY_BASE_URL="http://localhost:4001"
+pnpm events:mariners
+```
+
+Set `SAMPLE_EVENTS_IF_EMPTY=1` if there are no home games this week but you still want a demo packet.
+

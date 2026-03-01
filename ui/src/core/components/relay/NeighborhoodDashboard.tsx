@@ -9,12 +9,13 @@ import { RelayFeedPanel } from "./RelayFeedPanel";
 
 type StatusLevel = "normal" | "elevated" | "critical";
 
-type FeedKey = "weather" | "fire" | "crime";
+type FeedKey = "weather" | "fire" | "crime" | "events";
 
 const FEED_TYPES: { key: FeedKey; label: string }[] = [
   { key: "weather", label: "Weather" },
   { key: "fire", label: "Fire / 911" },
   { key: "crime", label: "SPD" },
+  { key: "events", label: "Events" },
 ];
 
 function formatDateLabel(window?: string) {
@@ -44,7 +45,13 @@ function determineStatus(hoodId: string, relays: RelayPacket[]): StatusLevel {
 
 function feedSummary(feed: FeedKey, hoodId: string, relays: RelayPacket[]) {
   const prefix =
-    feed === "crime" ? "crime:" : feed === "fire" ? "fire:" : "weather:";
+    feed === "crime"
+      ? "crime:"
+      : feed === "fire"
+        ? "fire:"
+        : feed === "events"
+          ? "event:"
+          : "weather:";
   const relevant = relays.filter(
     (relay) =>
       relay.status !== "resolved" &&
@@ -162,7 +169,7 @@ export function NeighborhoodDashboard() {
                     </span>
                   </div>
 
-                  <div className="mt-3 grid gap-2 text-[11px] sm:grid-cols-3">
+                  <div className="mt-3 grid gap-2 text-[11px] sm:grid-cols-2 lg:grid-cols-4">
                     {FEED_TYPES.map(({ key, label }) => {
                       const summary = feedSummaries[key];
                       return (

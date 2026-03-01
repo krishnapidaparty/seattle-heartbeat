@@ -111,3 +111,15 @@ cd services/ingest
 export RELAY_BASE_URL="http://localhost:4001"
 pnpm spd:blotter
 ```
+
+### Events ingest
+
+Use MLB's public schedule to post upcoming Mariners home games:
+
+```bash
+cd services/ingest
+export RELAY_BASE_URL="http://localhost:4001"
+pnpm events:mariners
+```
+
+Set `SAMPLE_EVENTS_IF_EMPTY=1` when there are no games in the next week but you want a demo relay.

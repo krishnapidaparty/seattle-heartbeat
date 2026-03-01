@@ -6,7 +6,8 @@
     "weather": "tsx src/weather-alerts.ts",
     "fire": "tsx src/fire-911.ts",
     "weather:conditions": "tsx src/weather-conditions.ts",
-    "spd:blotter": "tsx src/spd-blotter.ts"
+    "spd:blotter": "tsx src/spd-blotter.ts",
+    "events:mariners": "tsx src/events-mariners.ts"
   },
   "dependencies": {
     "fast-xml-parser": "^5.4.1",
