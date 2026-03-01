@@ -92,6 +92,7 @@ function NeighborhoodCard({
 }) {
   const accent = tileAccent(status);
   const headline = tileHeadline(hoodId, relays);
+  const llmSummary = neighborhoodSummary(hoodId, relays);
 
   return (
     <article
@@ -129,6 +130,8 @@ function NeighborhoodCard({
           );
         })}
       </div>
+
+      <p className="mt-3 text-xs italic text-foreground/60">{llmSummary}</p>
     </article>
   );
 }
@@ -175,6 +178,18 @@ function tileHeadline(hoodId: string, relays: RelayPacket[]) {
   const dateLabel = formatDateLabel(relay.window);
   const base = relay.notes || relay.requestedActions?.[0] || relay.category;
   return `${dateLabel ? `${dateLabel} · ` : ""}${base}`;
+}
+
+function neighborhoodSummary(hoodId: string, relays: RelayPacket[]) {
+  const active = relays.filter(
+    (relay) => relay.status !== "resolved" && (relay.origin === hoodId || relay.targets.includes(hoodId)),
+  );
+  if (!active.length) return "Calm stretch — no alerts on the board.";
+  const urgentCount = active.filter((relay) => relay.urgency === "urgent").length;
+  const top = active[0];
+  const dateLabel = formatDateLabel(top.window);
+  const descriptor = top.notes || top.requestedActions?.[0] || top.category;
+  return `${urgentCount ? `${urgentCount} urgent · ` : ""}${dateLabel ? `${dateLabel} · ` : ""}${descriptor}`;
 }
 
 function feedSummary(feed: FeedKey, hoodId: string, relays: RelayPacket[]) {
