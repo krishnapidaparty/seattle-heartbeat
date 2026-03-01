@@ -106,7 +106,6 @@ function NeighborhoodCard({
   const feedSummaries = Object.fromEntries(
     FEED_TYPES.map(({ key }) => [key, feedSummary(key, hoodId, relays)]),
   ) as FeedSummaryMap;
-  const headline = buildHeadline(feedSummaries);
   const llmSummary = neighborhoodSummary(feedSummaries);
 
   return (
@@ -127,10 +126,6 @@ function NeighborhoodCard({
           {statusLabel(status)}
         </span>
       </div>
-
-      <p className="mt-4 rounded-2xl bg-white/70 p-3 text-sm leading-relaxed text-foreground/70">
-        {headline}
-      </p>
 
       <div className="mt-4 grid gap-2 text-[11px] lg:grid-cols-4 sm:grid-cols-2">
         {FEED_TYPES.map(({ key, label }) => {
