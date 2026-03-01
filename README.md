@@ -136,10 +136,11 @@ pnpm events:eventbrite
 
 ### Traffic ingest
 
-Use Seattle's bridge counts to emit relays when crossings spike:
+Use WSDOT travel times (needs `WSDOT_ACCESS_CODE`) to flag congestion spikes:
 
 ```bash
 cd services/ingest
+export WSDOT_ACCESS_CODE="<code>"
 export RELAY_BASE_URL="http://localhost:4001"
 pnpm traffic:bridges
 ```

@@ -115,13 +115,13 @@ export RELAY_BASE_URL="http://localhost:4001"
 pnpm events:eventbrite
 ```
 
-## Traffic bridge ingest
+## WSDOT travel time ingest
 
-Pulls the latest Fremont Bridge counts (Seattle open data) and emits relays when volume exceeds thresholds.
+Uses WSDOT's TravelTimes REST API (requires `WSDOT_ACCESS_CODE`) to detect heavy congestion.
 
 ```bash
 cd services/ingest
+export WSDOT_ACCESS_CODE="<your-code>"
 export RELAY_BASE_URL="http://localhost:4001"
-# optional: export SOCRATA_APP_TOKEN=...
 pnpm traffic:bridges
 ```
