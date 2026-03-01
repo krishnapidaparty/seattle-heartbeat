@@ -17,6 +17,15 @@ const FEED_TYPES: { key: FeedKey; label: string }[] = [
   { key: "traffic", label: "Transit & Traffic" },
 ];
 
+const CATEGORY_PREFIX: Record<FeedKey, string> = {
+  weather: "weather:",
+  fire: "fire:",
+  crime: "crime:",
+  traffic: "traffic:",
+};
+
+const FEED_PRIORITY: FeedKey[] = ["crime", "fire", "traffic", "weather"];
+
 export function NeighborhoodDashboard() {
   const { relays } = useRelayContext();
   const { conditions: weatherConditions, error: weatherError } = useWeatherConditions();
@@ -172,12 +181,19 @@ function determineStatus(hoodId: string, relays: RelayPacket[]): StatusLevel {
 function tileHeadline(hoodId: string, relays: RelayPacket[]) {
   const relevant = relays
     .filter((relay) => relay.status !== "resolved" && (relay.origin === hoodId || relay.targets.includes(hoodId)))
-    .sort((a, b) => (a.urgency === "urgent" ? -1 : 1));
+    .sort((a, b) => {
+      const feedA = feedKeyForCategory(a.category);
+      const feedB = feedKeyForCategory(b.category);
+      const priorityA = feedA ? FEED_PRIORITY.indexOf(feedA) : FEED_PRIORITY.length;
+      const priorityB = feedB ? FEED_PRIORITY.indexOf(feedB) : FEED_PRIORITY.length;
+      if (a.urgency !== b.urgency) return a.urgency === "urgent" ? -1 : 1;
+      return priorityA - priorityB;
+    });
   if (!relevant.length) return "All clear. No active civic or weather signals.";
   const relay = relevant[0];
   const dateLabel = formatDateLabel(relay.window);
   const base = relay.notes || relay.requestedActions?.[0] || relay.category;
-  return `${dateLabel ? `${dateLabel} · ` : ""}${base}`;
+  return truncateText(`${dateLabel ? `${dateLabel} · ` : ""}${base}`, 120);
 }
 
 function neighborhoodSummary(hoodId: string, relays: RelayPacket[]) {
@@ -185,22 +201,30 @@ function neighborhoodSummary(hoodId: string, relays: RelayPacket[]) {
     (relay) => relay.status !== "resolved" && (relay.origin === hoodId || relay.targets.includes(hoodId)),
   );
   if (!active.length) return "Calm stretch — no alerts on the board.";
-  const urgentCount = active.filter((relay) => relay.urgency === "urgent").length;
-  const top = active[0];
+  const sorted = active.sort((a, b) => (a.urgency === "urgent" ? -1 : 1));
+  const top = sorted[0];
+  const feed = feedKeyForCategory(top.category);
+  const label = feed ? FEED_TYPES.find((f) => f.key === feed)?.label : "Signal";
   const dateLabel = formatDateLabel(top.window);
   const descriptor = top.notes || top.requestedActions?.[0] || top.category;
-  return `${urgentCount ? `${urgentCount} urgent · ` : ""}${dateLabel ? `${dateLabel} · ` : ""}${descriptor}`;
+  return truncateText(`${label ? `${label}: ` : ""}${dateLabel ? `${dateLabel} · ` : ""}${descriptor}`, 140);
 }
 
 function feedSummary(feed: FeedKey, hoodId: string, relays: RelayPacket[]) {
-  const prefix =
-    feed === "crime" ? "crime:" : feed === "fire" ? "fire:" : feed === "traffic" ? "traffic:" : "weather:";
-  const relevant = relays.filter(
-    (relay) =>
-      relay.status !== "resolved" &&
-      (relay.origin === hoodId || relay.targets.includes(hoodId)) &&
-      relay.category.startsWith(prefix),
-  );
+  const prefix = CATEGORY_PREFIX[feed];
+  const relevant = relays
+    .filter(
+      (relay) =>
+        relay.status !== "resolved" &&
+        (relay.origin === hoodId || relay.targets.includes(hoodId)) &&
+        relay.category.startsWith(prefix),
+    )
+    .filter((relay) => {
+      if (!relay.window || feed !== "traffic") return true;
+      const date = parseDateValue(relay.window);
+      return !date || Date.now() - date.getTime() <= 2 * 60 * 60 * 1000;
+    });
+
   if (!relevant.length) return { level: "normal" as StatusLevel, text: "All clear" };
   const hasCritical = relevant.some((r) => r.urgency === "urgent" || r.impactScore >= 0.8);
   const latest = relevant[0];
@@ -208,8 +232,29 @@ function feedSummary(feed: FeedKey, hoodId: string, relays: RelayPacket[]) {
   const text = latest.notes || latest.requestedActions?.[0] || latest.category;
   return {
     level: hasCritical ? "critical" : "elevated",
-    text: `${dateLabel ? `${dateLabel} — ` : ""}${text}`,
+    text: truncateText(`${dateLabel ? `${dateLabel} — ` : ""}${text}`),
   };
+}
+
+function feedKeyForCategory(category: string): FeedKey | undefined {
+  return (Object.keys(CATEGORY_PREFIX) as FeedKey[]).find((key) =>
+    category.startsWith(CATEGORY_PREFIX[key]),
+  );
+}
+
+function parseDateValue(value?: string) {
+  if (!value) return null;
+  const match = /\/Date\((\d+)/.exec(value);
+  if (match) {
+    return new Date(Number(match[1]));
+  }
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? null : new Date(parsed);
+}
+
+function truncateText(text: string, max = 90) {
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 1)}…`;
 }
 
 function summarizeRelays(relays: RelayPacket[]) {
@@ -217,8 +262,8 @@ function summarizeRelays(relays: RelayPacket[]) {
   const urgent = relays.filter((r) => r.urgency === "urgent").length;
   const byFeed: Record<FeedKey, number> = { weather: 0, fire: 0, crime: 0, traffic: 0 };
   relays.forEach((relay) => {
-    const match = FEED_TYPES.find(({ key }) => relay.category.startsWith(key === "traffic" ? "traffic:" : `${key}:`));
-    if (match) byFeed[match.key] += 1;
+    const key = feedKeyForCategory(relay.category);
+    if (key) byFeed[key] += 1;
   });
 
   const busiest = Object.entries(byFeed)
@@ -272,10 +317,9 @@ function statusLabel(level: StatusLevel) {
 }
 
 function formatDateLabel(window?: string) {
-  if (!window) return "";
-  const parsed = Date.parse(window);
-  if (Number.isNaN(parsed)) return window;
-  return new Date(parsed).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const date = parseDateValue(window);
+  if (!date) return "";
+  return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 function formatNumber(value: number | null | undefined) {
