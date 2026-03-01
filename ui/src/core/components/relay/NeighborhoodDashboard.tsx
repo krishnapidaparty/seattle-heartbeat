@@ -9,13 +9,13 @@ import { RelayFeedPanel } from "./RelayFeedPanel";
 
 type StatusLevel = "normal" | "elevated" | "critical";
 
-type FeedKey = "weather" | "fire" | "crime" | "events";
+type FeedKey = "weather" | "fire" | "crime" | "traffic";
 
 const FEED_TYPES: { key: FeedKey; label: string }[] = [
   { key: "weather", label: "Weather" },
   { key: "fire", label: "Fire / 911" },
   { key: "crime", label: "SPD" },
-  { key: "events", label: "Events" },
+  { key: "traffic", label: "Transit & Traffic" },
 ];
 
 function formatDateLabel(window?: string) {
@@ -49,8 +49,8 @@ function feedSummary(feed: FeedKey, hoodId: string, relays: RelayPacket[]) {
       ? "crime:"
       : feed === "fire"
         ? "fire:"
-        : feed === "events"
-          ? "event:"
+        : feed === "traffic"
+          ? "traffic:"
           : "weather:";
   const relevant = relays.filter(
     (relay) =>
@@ -133,7 +133,7 @@ export function NeighborhoodDashboard() {
         <h1 className="text-2xl font-semibold">Neighborhood Overview</h1>
         <p className="text-sm text-foreground/50">
           Live signals across six priority neighborhoods. Status updates every
-          few minutes from weather, events, and incidents.
+          few minutes from weather, transit, and incidents.
         </p>
       </header>
 

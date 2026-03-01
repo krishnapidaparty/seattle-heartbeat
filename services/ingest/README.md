@@ -103,3 +103,25 @@ pnpm events:mariners
 ```
 
 
+
+## Eventbrite ingest
+
+Requires `EVENTBRITE_TOKEN` env var from your Eventbrite app.
+
+```bash
+cd services/ingest
+export EVENTBRITE_TOKEN="<token>"
+export RELAY_BASE_URL="http://localhost:4001"
+pnpm events:eventbrite
+```
+
+## Traffic bridge ingest
+
+Pulls the latest Fremont Bridge counts (Seattle open data) and emits relays when volume exceeds thresholds.
+
+```bash
+cd services/ingest
+export RELAY_BASE_URL="http://localhost:4001"
+# optional: export SOCRATA_APP_TOKEN=...
+pnpm traffic:bridges
+```

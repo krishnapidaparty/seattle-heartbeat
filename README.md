@@ -122,3 +122,24 @@ export RELAY_BASE_URL="http://localhost:4001"
 pnpm events:mariners
 ```
 
+
+### Eventbrite ingest
+
+Set `EVENTBRITE_TOKEN` and run:
+
+```bash
+cd services/ingest
+export EVENTBRITE_TOKEN="<token>"
+export RELAY_BASE_URL="http://localhost:4001"
+pnpm events:eventbrite
+```
+
+### Traffic ingest
+
+Use Seattle's bridge counts to emit relays when crossings spike:
+
+```bash
+cd services/ingest
+export RELAY_BASE_URL="http://localhost:4001"
+pnpm traffic:bridges
+```
